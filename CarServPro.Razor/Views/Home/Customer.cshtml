@@ -1,0 +1,74 @@
+@model List<CarServPro.Razor.Models.CarDTO>
+
+@{
+    ViewData["Title"] = "Customer Vehicles & Services";
+}
+
+<h2>Vehicles and Service History</h2>
+
+@if (Model.Count != 0)
+{
+    foreach (var car in Model)
+    {
+        <div class="card my-4">
+            <div class="card-header bg-primary text-white">
+                <strong>Car RegistrationNumber:</strong> @car.RegistrationNumber - <strong></strong>
+            </div>
+            <div class="card-body">
+                @if (car.Services == null || !car.Services.Any())
+                {
+                    <p class="text-warning">This car has no any services.</p>
+                }
+                else
+                {
+                    <h5>Service History</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Service Date</th>
+                                <th>Completion Date</th>
+                                <th>Mechanic</th>
+                                <th>Status</th>
+                                <th>Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var service in car.Services)
+                            {
+                                if (service.Status == "Pending")
+                                {
+                                    <tr class="table-warning">
+                                        <td>@service.ServiceDate.ToShortDateString()</td>
+                                        <td colspan="3" class="text-center text-muted">Service is still in progress</td>
+                                        <td><strong>@service.Status</strong></td>
+                                    </tr>
+                                }
+                                else if (service.Status == "Completed")
+                                {
+                                    <tr>
+                                        <td>@service.ServiceDate.ToShortDateString()</td>
+                                        <td>
+                                            @if (service.CompletionDate.HasValue)
+                                            {
+                                                @service.CompletionDate.Value.ToShortDateString()
+                                            }
+                                            else
+                                            {
+                                                <span class="text-danger">N/A</span>
+                                            }
+                                        </td>
+                                        <td>@service.MechanicName    </td>
+                                        <td>@service.Status</td>
+                                        <td>
+                                            @(service.TotalCost.HasValue ? "€" + service.TotalCost.Value.ToString("F2") : "N/A")
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+}

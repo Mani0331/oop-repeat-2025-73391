@@ -1,0 +1,118 @@
+@model List<CarServPro.Razor.Models.ServiceDTO>
+
+@{
+    ViewData["Title"] = "My Assigned Services";
+}
+
+<h2>My Assigned Services</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No services are currently assigned to you.</div>
+}
+else
+{
+    <div class="accordion" id="servicesAccordion">
+        @foreach (var service in Model)
+        {
+            <div class="card mb-3">
+                <div class="card-header @(service.Status == "Completed" ? "bg-success text-white" : "bg-warning")" 
+                     id="heading-@service.ServiceId">
+                    <h3 class="mb-0">
+                        <button class="btn btn-link text-white" type="button" data-bs-toggle="collapse" 
+                                data-bs-target="#collapse-@service.ServiceId" aria-expanded="true" 
+                                aria-controls="collapse-@service.ServiceId">
+                            <strong>Car:</strong> @service.RegistrationNumber | 
+                            <strong>Status:</strong> @service.Status |
+                            <strong>Assigned On:</strong> @service.ServiceDate.ToShortDateString()
+                        </button>
+                    </h3>
+                </div>
+
+                <div id="collapse-@service.ServiceId" class="collapse show" 
+                     aria-labelledby="heading-@service.ServiceId" data-parent="#servicesAccordion">
+                    <div class="card-body">
+                        @if (service.Status == "Completed")
+                        {
+                            <div class="completed-service">
+                                <p><strong>Work Description:</strong> @service.WorkDescription</p>
+                                <p><strong>Hours Worked:</strong> @service.Hours</p>
+                                <p><strong>Completed On:</strong> @service.CompletionDate?.ToShortDateString()</p>
+                                <p><strong>Total Cost:</strong> €@service.TotalCost</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <form asp-action="CompleteService" method="post" class="service-form">
+                                <input type="hidden" name="id" value="@service.ServiceId" />
+
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Work Performed:</strong></label>
+                                    <textarea name="workDescription" class="form-control" rows="3" required 
+                                              placeholder="Describe the work you performed"></textarea>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label"><strong>Hours Worked:</strong></label>
+                                        <input type="number" name="hours" class="form-control" min="0.5" step="0.5" 
+                                               required placeholder="Enter hours (e.g., 1.5)">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label"><strong>Estimated Cost:</strong></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="text" class="form-control" id="estimatedCost-@service.ServiceId" 
+                                                   readonly value="Calculated automatically">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="submit" class="btn btn-success me-md-2">
+                                        <i class="fas fa-check-circle"></i> Mark as Complete
+                                    </button>
+                                </div>
+                            </form>
+
+                            <script>
+                                document.querySelector('input[name="hours"]').addEventListener('input', function() {
+                                    const hours = parseFloat(this.value) || 0;
+                                    const hourlyRate = 75;
+                                    const hoursRounded = Math.ceil(hours);
+                                    const estimatedCost = hoursRounded * hourlyRate;
+                                    document.getElementById('estimatedCost-@service.ServiceId').value = 
+                                        '€' + estimatedCost.toFixed(2);
+                                });
+                            </script>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.collapse').forEach(collapse => {
+            collapse.addEventListener('show.bs.collapse', function () {
+                this.parentElement.querySelector('.card-header').classList.add('active');
+            });
+            collapse.addEventListener('hide.bs.collapse', function () {
+                this.parentElement.querySelector('.card-header').classList.remove('active');
+            });
+        });
+
+        document.querySelectorAll('input[name="hours"]').forEach(input => {
+            input.addEventListener('input', function() {
+                const form = this.closest('form');
+                const hours = parseFloat(this.value) || 0;
+                const hourlyRate = 75;
+                const hoursRounded = Math.ceil(hours);
+                const estimatedCost = hoursRounded * hourlyRate;
+                form.querySelector('input[id^="estimatedCost"]').value = '€' + estimatedCost.toFixed(2);
+            });
+        });
+    </script>
+}
